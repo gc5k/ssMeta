@@ -149,7 +149,13 @@ For $m$ loci, we have $\mathbf{h}$, a $m\times 1$ vector. As the vector $\mathbf
 
 $\hat{\rho}_{\lambda_{meta}}=1-\lambda_{meta}$, and $E(\rho_{\lambda_{meta}})=\frac{n_o}{\sqrt{n_1n_2}}$.
 
-##5 Meta-analysis
+##5 Various overlapping relatives
+
+1. Overlapping individuals
+
+2. Overlapping relatives
+
+##6 Meta-analysis
 
 For a pair of cohorts, for the$j^{th}$ locus, we have $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$, and $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$.
 
@@ -255,7 +261,7 @@ abline(a=0, b=1)
 ```
 
 
-##6 Notes for LD simulation
+##7 Notes for LD simulation
 
 **A pair of loci**
 
