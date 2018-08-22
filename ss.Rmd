@@ -128,7 +128,10 @@ For a pair of cohorts we have summary statistics below
 ||||||||||||
 
 
-##4 $\lambda_{meta}$
+##4 Simulating nuclear families
+
+
+##5 $\lambda_{meta}$
 
 Given the summary statistics below, we have
 
@@ -149,13 +152,13 @@ For $m$ loci, we have $\mathbf{h}$, a $m\times 1$ vector. As the vector $\mathbf
 
 $\hat{\rho}_{\lambda_{meta}}=1-\lambda_{meta}$, and $E(\rho_{\lambda_{meta}})=\frac{n_o}{\sqrt{n_1n_2}}$.
 
-##5 Various overlapping relatives
+##6 Various overlapping relatives
 
 1. Overlapping individuals
 
 2. Overlapping relatives
 
-##6 Meta-analysis
+##7 Meta-analysis
 
 For a pair of cohorts, for the$j^{th}$ locus, we have $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$, and $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$.
 
@@ -260,8 +263,14 @@ qqplot(main="Heterogeneity (4 cohorts)", xlab="Q", ylab=expression(paste("Theore
 abline(a=0, b=1)
 ```
 
+##8 MLM GWAMA
+Mixed model for GWAMA
 
-##7 Notes for LD simulation
+$\beta=\mu+Mb+e$
+
+$\beta\sim N(\mu, \sigma_M+\sigma_e)$
+
+##9 Notes for LD simulation
 
 **A pair of loci**
 
