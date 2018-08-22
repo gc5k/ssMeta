@@ -1,0 +1,298 @@
+---
+title: "SumStat"
+author: "gc5k"
+date: "7/7/2018"
+output: 
+  html_document:
+    theme: united
+    highlight: tango
+    code_folding: hide
+---
+
+
+```{r, date, echo=FALSE, warning=FALSE}
+Date=Sys.Date()[1]
+print(paste0("Document was last updated at ", Date, "."))
+```
+
+----
+
+#Table of contents {.tabset .tabset-fade .tabset-pills}
+
+##1 Theory
+
+
+**Background**
+
+Several studies have used summary statistics for the inference of genetic architecture 
+
+1. [AJHG, 2014, 96:21-36](Am J Hum Genet, 2014, 96:21-36), 
+
+2. [PLoS Genet, 2015,10:e1004198](http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3967938&tool=pmcentrez&rendertype=abstract)
+
+3. [Hum Mol Genet, 2016, 25:1857-1866](https://academic.oup.com/hmg/article/25/9/1857/2385201?searchresult=1)
+
+4. [Am Stat, 2017](https://www.tandfonline.com/doi/full/10.1080/00031305.2016.1277159)
+
+5. [BMC Genomics, 2018, 19:494](https://www.ncbi.nlm.nih.gov/pubmed/29940862)
+
+--------------------------------------
+
+**Theory**
+
+The theory of the paper can be found in [*Eur J Hum Genet*, 2017, 25:137-46](https://www.nature.com/articles/ejhg2016106). For a pair of cohort their correlation of their z scores can be defined 
+
+$\rho=cor(\textbf{z}_1,\textbf{z}_2)=\frac{\frac{\sqrt{h^2_1h^2_2}}{m}\gamma_G+\frac{\gamma_{o}}{\sqrt{n_1n_2}}\gamma_P}{\sqrt{\frac{h^2_1}{m}+\frac{1}{n_1}}\sqrt{\frac{h^2_2}{m}+\frac{1}{n_2}}}$
+
+|Notation|Interpretation|
+|--------|--------------------------------------------|
+|$\textbf{z}$| z scores, a vector of $M\times1$, for SNPs|
+|$h^2_{.}$|heritbility for a trait|
+|$m$|SNPs|
+|$n_{.}$|Sample size|
+|$\gamma_G$|Genetic correlation for a pair of traits|
+|$\gamma_P$|Phenotypic correlation for a pair of traits|
+|$r_{o}=\frac{n_o}{\sqrt{n_1n_2}}$|Overlapping samples between a pair of cohorts|
+
+##2 Simulating a cohort
+
+**Parameter setting (no LD):**
+
+1. Sample size, $n=\{1000, 2000\}$
+2. number of markers, $m = \{1,000, 10,000\}$
+3. number of QTLs, $m_{Q} = \{100, 500, 1,000\} (<=m)$
+4. For $m$ loci, its allele frequency is from uniform distribution $p \sim U(0.05, 0.95)$
+5. Genetic effect is sampled from $\mathbf{\beta}_i \sim N(0, \frac{h^2}{m_Q})$
+6. heritability, $h^2=\{0.1, 0.2, 0.5\}$
+
+The whole genotype matrix is $\mathbf{G}_{n\times m}$. For individual $i$ its $j^{th}$ locus $\mathbf{G}_{ij}$ is sampled from binomial distribution $\mathbf{B}(p_j,2)$, in which $p_j$ is the allele frequency of the locus.
+
+$\mathbf{y}=\mu+\mathbf{G}\beta+e$
+
+in which $e \sim N(0, \frac{\sigma^2_{(\mathbf{G\beta})}}{h^2}(1-h^2))$ so that the genotypic variation $V_G=Var(\mathbf{G}\beta)$ can be scaled to satify heritability.
+
+```{r, generating a single cohort}
+print("Write R code for simulating a single cohort")
+```
+
+------------------------------
+
+**Estimate genetic effects**
+
+$\mathbf{y}=a+\beta_j\mathbf{g}_j+e$
+
+```{r, gwas}
+print("Write R code for estimating single-marker gwas")
+```
+
+After GWAS, we have a table for GWAS summary statistics
+
+| SNP | Ref Allele | Alt Allele | Freq | Effect | SE |
+|---|----|-----|----|----|----|
+|$SNP_1$ | G | A | $\hat{p}_1$ | $\hat\beta_1$ | $\hat{\sigma}_{\beta_1}$ |
+|$SNP_2$ | T | C | $\hat{p}_2$ | $\hat\beta_2$ | $\hat{\sigma}_{\beta_2}$ |
+|$\mathbf{SNP}_3$ | ~~T~~ | ~~A~~ | $\hat{p}_3$ | $\hat\beta_3$ | $\hat{\sigma}_{\beta_3}$ |
+|$\mathbf{SNP}_4$ | ~~G~~ | ~~C~~ | $\hat{p}_4$ | $\hat\beta_4$ | $\hat{\sigma}_{\beta_4}$ |
+|$\vdots$| $\vdots$ | $\vdots$| $\vdots$ | $\vdots$ | $\vdots$ |
+|$SNP_m$ | C | T|  $\hat{p}_m$ | $\hat\beta_m$ | $\hat{\sigma}_{\beta_m}$ |
+|||||||
+
+
+##3 Simulating a pair of cohorts
+
+In general, the procedure is the same as for simulating a single cohort. 
+
+However, for cohort 2 that is derived from the same ancestry as cohort 1, the expected allele frequency $p_{j,2}=p_{j,1}$. 
+
+Given the genetic correlation between cohort 1 and 2 is $cor(\mathbf{\beta}_{1}, \mathbf{\beta}_{2})=\gamma_G$, the genetic effect for cohort 2 can be simulated as $\beta_2=\gamma_G\beta_1+\sqrt{1-r^2}\tilde{e}$, in which $\tilde{e} \sim (0, h^2_2)$.
+
+--------------------
+
+**Directly simulating summary statistics for GWAS**
+
+Assuming the genetic effect is estimated via LSE for the model below
+
+$\mathbf{y}=a+\beta_i \mathbf{g}_i+e$ 
+
+For locus $j$, its estimated effect is distributed
+$\hat\beta_i \sim N(\beta_i, \sqrt{\frac{\sigma_y^2-\sigma_{g_i}^2 \beta^2_i}{(n_1-n_u)\sigma_{g_i}^2}})$, in which $E(\sigma_{g_i}^2)=2p_i \bar p_i$, and $\hat{\sigma}_{\beta}^2=\frac{\sigma_y^2-\sigma_{g_i}^2 \beta^2_i}{(n_1-n_u)\sigma_{g_i}^2}$, $n_u$ ($n_c=2$ here for the model above) is the number of parameters in the LSE.
+
+For a pair of cohorts we have summary statistics below
+
+| SNP | Ref Allele$_1$ | Alt Allele$_1$ | Freq$_1$ | Effect$_1$ | SE$_1$ | Ref Allele$_2$ | Alt Allele$_2$ | Effect$_2$ | Freq$_2$ | SE$_2$ |
+|:---|:------------:|:------------:|:---------------:|:----------:|:----------:|:----------------:|:---------------:|:-----------:|:-------:|:-------:|
+|$SNP_{1}$ | A | C | $\hat{p}_{1.1}$ | $\hat\beta_{1.1}$ | $\hat{\sigma}_{\beta_{1.1}}$ |  A | C | $\hat{p}_{1.1}$ | $\hat\beta_{1.2}$ | $\hat{\sigma}_{\beta_{1.2}}$ |
+|$\mathbf{SNP}_{2}$ | ~~G~~ | ~~C~~ | $\hat{p}_{2.1}$ | $\hat\beta_{2.1}$ | $\hat{\sigma}_{\beta_{2.1}}$ |  ~~G~~ | ~~C~~ | $\hat{p}_{2.1}$ | $\hat\beta_{2.2}$ | $\hat{\sigma}_{\beta_{2.2}}$ |
+|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|
+|$SNP_{m}$ | A | C | $\hat{p}_{m.1}$ | $\hat\beta_{m.1}$ | $\hat{\sigma}_{\beta_{m.1}}$ |  A | C | $\hat{p}_{m.1}$ | $\hat\beta_{m.2}$ | $\hat{\sigma}_{\beta_{m.2}}$ |
+||||||||||||
+
+
+##4 $\lambda_{meta}$
+
+Given the summary statistics below, we have
+
+| SNP | Ref Allele$_1$ | Alt Allele$_1$ | Freq$_1$ | Effect$_1$ | SE$_1$ | Ref Allele$_2$ | Alt Allele$_2$ | Effect$_2$ | Freq$_2$ | SE$_2$ |
+|:---|:------------:|:------------:|:---------------:|:----------:|:----------:|:----------------:|:---------------:|:-----------:|:-------:|:-------:|
+|$SNP_{1}$ | A | C | $\hat{p}_{1.1}$ | $\hat\beta_{1.1}$ | $\hat{\sigma}_{\beta_{1.1}}$ |  A | C | $\hat{p}_{1.1}$ | $\hat\beta_{1.2}$ | $\hat{\sigma}_{\beta_{1.2}}$ |
+|$\mathbf{SNP}_{2}$ | ~~G~~ | ~~C~~ | $\hat{p}_{2.1}$ | $\hat\beta_{2.1}$ | $\hat{\sigma}_{\beta_{2.1}}$ |  ~~G~~ | ~~C~~ | $\hat{p}_{2.1}$ | $\hat\beta_{2.2}$ | $\hat{\sigma}_{\beta_{2.2}}$ |
+|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|$\vdots$|
+|$SNP_{m}$ | A | C | $\hat{p}_{m.1}$ | $\hat\beta_{m.1}$ | $\hat{\sigma}_{\beta_{m.1}}$ |  A | C | $\hat{p}_{m.1}$ | $\hat\beta_{m.2}$ | $\hat{\sigma}_{\beta_{m.2}}$ |
+||||||||||||
+
+We can estimate $\lambda_{meta}$ statistic as below
+
+$h_i= \frac{(\beta_{j,1}-\beta_{j,2})^2}
+{\sigma_{j,1}^2+\sigma_{j,2}^2} \sim \chi^2_1$
+
+For $m$ loci, we have $\mathbf{h}$, a $m\times 1$ vector. As the vector $\mathbf{h} \sim \chi^2_1$, we can define $\lambda_{meta}=\frac{median(\mathbf{h})}{0.455}$, in which 0.455 is the quantity for $\chi^2_{1,p=0.5}=0.455$. Under the null hypothesis of no overlapping samples, $E(\lambda_{meta})=1$.
+
+$\hat{\rho}_{\lambda_{meta}}=1-\lambda_{meta}$, and $E(\rho_{\lambda_{meta}})=\frac{n_o}{\sqrt{n_1n_2}}$.
+
+##5 Meta-analysis
+
+For a pair of cohorts, for the$j^{th}$ locus, we have $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$, and $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$.
+
+Using generalized (or weighted) least squares (GLS) estimates the genetic effect
+
+$\mathbf{y}=\mu+e$
+
+in which $\mathbf{y}^T=[\hat{\beta}_{j,1}, \hat{\beta}_{j,2}]$, and 
+$$
+e=
+\left[
+\begin{matrix} 
+1&\rho_{1,2} \\
+\rho_{1,2}&1
+\end{matrix}
+\right]
+$$
+
+Correct and incorrect ways in estimating 
+
+Correct but subject to heterogeneity: $\hat\rho=1-\lambda_{meta}$
+
+Incorrect and subject to genetic architecture: $\hat\rho=cov(\mathbf{Z}_1, \mathbf{Z}_2)$ or $\hat\rho=cov(\mathbf{\beta}_1, \mathbf{\beta}_2)$
+
+More details for the estimation method can be [1 & 2 are generalized lse, 3 & 4 are chisq test]
+
+1. Am J Hum Genet, "Meta-analysis of genome-wide association studies with overlapping subjects.", 2009:85, 862-72, **Eq 3-5**
+
+2. Bioinformatics, "METAL: fast and efficient meta-analysis of genomewide association scans", 2010:26, 2190-1, See their **Table**
+
+3. [Zhu Xiaofeng, Am J Hum Genet, 2014, 96:21-36](Am J Hum Genet, 2014, 96:21-36)
+
+4. [Mike Goddard, PLoS Genet, 2015,10:e1004198](http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3967938&tool=pmcentrez&rendertype=abstract)
+
+5. [Wang et al, Hum Mol Genet, 2013, 22:2303-2311](https://academic.oup.com/hmg/article/22/11/2303/634133)
+
+```{r, meta}
+set.seed(1000)
+CT=4
+N=ceiling(rnorm(CT, 3000, 1000))
+M=10000
+
+#freq
+P=runif(M, 0.05, 0.95)
+Freq=matrix(0, M, CT)
+for(i in 1:CT) {
+  Freq[,i] = rnorm(M, P, sd=sqrt((P*(1-P))/(2*N[i])))
+}
+
+#mat
+h2=0.5
+Beta=rnorm(M, 0, sd=0)#=sqrt(h2/sum(2*P*(1-P))))
+Bmat=matrix(0, M, CT)
+Smat=matrix(0, M, CT)
+Pmat=matrix(0, M, CT)
+for(i in 1:CT) {
+  Smat[,i]=1/(N[i]*2*Freq[,i]*(1-Freq[,i]))
+  Bmat[,i] = rnorm(M, Beta, sd=sqrt(Smat[,i]))
+  Pmat[,i] = (1-pnorm(abs(Bmat[,i]/sqrt(Smat[,i]))))*2
+}
+
+#fixed model
+FisherP=matrix(0, M, 1)
+Fmeta=matrix(0, M, 3)
+Qmeta=matrix(0, M, 6)
+for(i in 1:M) {
+  FisherP[i,1]=-2*sum(log(Pmat[i,]))
+
+  v=1/Smat[i,]
+  Fmeta[i,2]=1/sum(v)
+  Fmeta[i,1]=sum(Bmat[i,]*v)/sum(v)
+  Fmeta[i,3]=Fmeta[i,1]/sqrt(Fmeta[i,2])
+
+  Qmeta[i,4]=sum(v*(Bmat[i,]-Fmeta[i,1])^2)
+  Qmeta[i,5]=sum(v)-sum(v^2)/sum(v)
+  Qmeta[i,6]=(Qmeta[i,4]-(CT-1))/Qmeta[i,5]
+  if(Qmeta[i,6]<0) {
+    Qmeta[i,6]=0
+  }
+  vr=1/(Smat[i,]+Qmeta[i,6])
+  Qmeta[i,2]=1/sum(v)+Qmeta[i,6]
+  Qmeta[i,1]=sum(vr*Bmat[i,])/sum(vr)
+  Qmeta[i,3]=Qmeta[i,1]^2/Qmeta[i,2]
+}
+layout(matrix(1:4, 2, 2))
+qqplot(main="Fisher's methods", xlab=expression(paste("Theoretical ", chi[8]^2)),
+       ylab=expression(paste("Observed ", chi[8]^2)),
+       FisherP, rchisq(M, 8), bty="n", pch=16)
+abline(a=0, b=1)
+
+qqplot(main="Fixed model", xlab=expression(paste("Theoretical ", chi[1]^2)),
+       ylab=expression(paste("Observed ", chi[1]^2)),
+       rchisq(M, 1), Fmeta[,3]^2, bty='n', pch=16)
+abline(a=0, b=1)
+
+qqplot(main="Random model", xlab=expression(paste("Theoretical ", chi[1]^2)),
+       ylab=expression(paste("Observed ", chi[1]^2)),
+       rchisq(M,1), Qmeta[,1]^2/Qmeta[,2], bty='n', pch=16)
+abline(a=0, b=1)
+
+qqplot(main="Heterogeneity (4 cohorts)", xlab="Q", ylab=expression(paste("Theoretical ", chi[3]^2)), Qmeta[,4], rchisq(M,CT-1), bty='n', pch=16)
+abline(a=0, b=1)
+```
+
+
+##6 Notes for LD simulation
+
+**A pair of loci**
+
+|Notations|Interpretation|
+|----|------------------------------------------------------------------|
+|$p_A, p_a=\bar p_A$ | Allele frequency for $A$ and $a$ at locus **A**|
+|$p_B, p_b=\bar p_B$ | Allele frequency for $B$ and $b$ at locus **B**|
+|$p_{AB}$ | Haplotype frequency for $AB$ |
+|$D_{AB}$ | Linkage disequilibrium $D_{AB}=p_{AB}-p_Ap_B$; the maximal $D_{AB}=0.25$ is reached when $p_A=p_B=0.5$|
+|${D}_{AB}^\prime$|Standardized $D_{AB}$; if $D_{AB} > 0$, ${D}_{AB}^\prime=\frac{{D}_{AB}}{min(p_ap_B,p_Ap_b)}$, if $D_{AB} < 0$, ${D}_{AB}^\prime=\frac{{D}_{AB}}{min(p_ap_b,p_Ap_B)}$|
+||
+
+**Haplotype table**
+
+| |  | Locus $\textbf{A}$ | |
+|:---:|:----:|:-----:|:-----:|:--:|
+|  |   | $A$  | $a$| |
+|Locus $\textbf{B}$ | $B$ |$AB: p_Ap_B+D$ | $aB: p_ap_B-D$| $p_B$|
+| |$b$|$Ab: p_Ap_b-D$  | $ab: p_ap_b+D$| $p_b$|
+| | |$p_A$ | $p_a$ | |
+||||||
+
+In haplotype simulation, under random mating, the conditional probability of generating the second locus could be expressed as (t is generation)
+
+1. $p(\mathbf{B}=B | \mathbf{A}=A)=\frac{p_Ap_B+D_{AB}^t}{p_A}$
+2. $p(\mathbf{B}=b | \mathbf{A}=A)=\frac{p_Ap_b-D_{AB}^t}{p_A}$
+3. $p(\mathbf{B}=B|\mathbf{A}=a)=\frac{p_ap_B-D_{AB}^t}{p_a}$
+4. $p(\mathbf{B}=B|\mathbf{A}=a)=\frac{p_ap_b+D_{AB}^t}{p_a}$
+
+$D_{AB}^t=D_{AB}(1-c_{AB})^t$, in which $c_{AB}$ is the recombination between loci **A** and **B**.
+
+```{r, ld simulation}
+print("Write R code for ld simulation")
+```
+
+**Reference**
+
+Devlin B., Risch N., 1995 A comparison of linkage disequilibrium measures for fine-scale mapping. **Genomics** 29: 311-22.
+
+Lewontin R. C., 1964 The Interaction of Selection and Linkage. I. General Considerations; Heterotic Models. **Genetics** 49: 49-67.
