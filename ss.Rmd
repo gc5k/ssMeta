@@ -311,3 +311,6 @@ print("Write R code for ld simulation")
 Devlin B., Risch N., 1995 A comparison of linkage disequilibrium measures for fine-scale mapping. **Genomics** 29: 311-22.
 
 Lewontin R. C., 1964 The Interaction of Selection and Linkage. I. General Considerations; Heterotic Models. **Genetics** 49: 49-67.
+
+
+##10 Power calculation
