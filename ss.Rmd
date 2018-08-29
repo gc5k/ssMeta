@@ -9,7 +9,6 @@ output:
     code_folding: hide
 ---
 
-
 ```{r, date, echo=FALSE, warning=FALSE}
 Date=Sys.Date()[1]
 print(paste0("Document was last updated at ", Date, "."))
@@ -20,7 +19,6 @@ print(paste0("Document was last updated at ", Date, "."))
 #Table of contents {.tabset .tabset-fade .tabset-pills}
 
 ##1 Theory
-
 
 **Background**
 
@@ -54,7 +52,17 @@ $\rho=cor(\textbf{z}_1,\textbf{z}_2)=\frac{\frac{\sqrt{h^2_1h^2_2}}{m}\gamma_G+\
 |$\gamma_P$|Phenotypic correlation for a pair of traits|
 |$r_{o}=\frac{n_o}{\sqrt{n_1n_2}}$|Overlapping samples between a pair of cohorts|
 
-##2 Simulating a cohort
+##2 Experiment design
+
+| | | | |Method | | |
+|:-----------------------------:|---------------------------------|---------------------------------------|-----------------------------|------------------------------------------|----------------------------|------------------------------------------------------|
+| Design | $cor(\beta_1,\beta_2)$ | | $\lambda_{meta}$ | | PPSR | |
+| No-consortia | $h^2=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |  $h^2=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ | NA | NA |
+|  | $h^2!=0$, $E(n_e)!=n_e$ | NA |  $h^2!=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ | NA | NA |
+| consortia | $h^2=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |  $h^2=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |$n_{e,0}$,$n_{e,1}$   | decouple, GLM, $\chi^2$, deep clean|
+|  | $h^2!=0$, $E(n_e)!=n_e$ | NA |  $h^2!=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |$n_{e,0}$,$n_{e,1}$  | decouple, GLM, $\chi^2$, deep clean |
+
+##3 Simulating a cohort
 
 **Parameter setting (no LD):**
 
@@ -98,7 +106,7 @@ After GWAS, we have a table for GWAS summary statistics
 |||||||
 
 
-##3 Simulating a pair of cohorts
+##4 Simulating a pair of cohorts
 
 In general, the procedure is the same as for simulating a single cohort. 
 
@@ -128,7 +136,124 @@ For a pair of cohorts we have summary statistics below
 ||||||||||||
 
 
-##4 $\lambda_{meta}$
+##5 Simulating nuclear families
+```{r, fam}
+
+M=100
+Kid=2
+freq=runif(M, 0.05, 0.95)
+hsq=0.5
+b=rnorm(M, 0, sqrt(3*hsq/M))
+famSize=100
+FamG=array(0, dim=c(famSize, (2+Kid)*2, M))
+Phe=array(0, (2+Kid)*famSize)
+for(f in 1:famSize) {
+  for(i in 1:famSize) {
+    fg=matrix(c(rbinom(M, 1, freq), rbinom(M, 1, freq)), 2, M, byrow = T)
+    mg=matrix(c(rbinom(M, 1, freq), rbinom(M, 1, freq)), 2, M, byrow = T)
+    Phe[(f-1)*(2+Kid)+1]= sum(fg[1,]*b+fg[2,]*b)
+    Phe[(f-1)*(2+Kid)+2]= sum(mg[1,]*b+mg[2,]*b)
+
+    kg=matrix(0, Kid*2, M)
+    for(k in 1:Kid) {
+      kg[(k-1)*2+1,] = fg[rbinom(1, 1, 0.5)+1,]
+      kg[(k-1)*2+2,] = fg[rbinom(1, 1, 0.5)+1,]
+      Phe[(f-1)*(2+Kid)+2+k] = sum(kg[(k-1)*2+1,]*b+kg[(k-1)*2+2,]*b)
+    }
+    FG=rbind(fg, mg, kg)
+    FamG[f,,]=FG
+  }
+}
+plot(freq, colMeans(colMeans(FamG[,,])), xlab="Exp freq", ylab="Obs freq", bty='n')
+abline(a=0, b=1)
+print(var(Phe))
+Phe=Phe+rnorm(length(Phe), 0, sqrt(0.5))
+print(var(Phe))
+```
+
+##6 Effective overlapping samples$n_e$
+```{r, ne}
+SimuInd <- function(s, m, h2, fq, B) {
+  hsq=h2
+  
+  Gn=matrix(0, s, m+1)
+  for(i in 1:s) {
+    Gn[i, 1:m] = rbinom(m, 2, fq)
+    Gn[i, m+1] = sum(Gn[i,1:m]*B) + rnorm(1, 0, sqrt(1-h2))
+  }
+  return(Gn)
+}
+
+SimuNuFam <- function (n1, m, k, h2, fq, B) {
+  
+  famSize=n1
+  M=m
+  Kid=k
+  hsq=h2
+  
+  freq=fq
+  b=B
+  #  FamG=array(0, dim=c(famSize, (2+Kid)*2, M))
+  FamG=array(0, dim=c(famSize, 2+Kid, M+1))
+  
+  Phe=array(0, (2+Kid)*famSize)
+  for(f in 1:famSize) {
+    fg=matrix(c(rbinom(M, 1, freq), rbinom(M, 1, freq)), 2, M, byrow = T)
+    mg=matrix(c(rbinom(M, 1, freq), rbinom(M, 1, freq)), 2, M, byrow = T)
+    Phe[(f-1)*(2+Kid)+1]= sum(fg[1,1:M]*b+fg[2,1:M]*b) + rnorm(1, 0, sqrt(1-h2))
+    Phe[(f-1)*(2+Kid)+2]= sum(mg[1,1:M]*b+mg[2,1:M]*b) + rnorm(1, 0, sqrt(1-h2))
+    FamG[f,1,1:M]=apply(fg, 2, sum)
+    FamG[f,2,1:M]=apply(mg, 2, sum)
+    
+    kg=matrix(0, Kid*2, M)
+    for(k in 1:Kid) {
+      kg[(k-1)*2+1,] = fg[rbinom(1, 1, 0.5)+1,]
+      kg[(k-1)*2+2,] = fg[rbinom(1, 1, 0.5)+1,]
+      Phe[(f-1)*(2+Kid)+2+k] = sum(kg[(k-1)*2+1,1:M]*b+kg[(k-1)*2+2,1:M]*b) + rnorm(1, 0, sqrt(1-h2))
+      FamG[f,2+k,1:M]=apply(kg[c((k-1)*2+1,(k-1)*2+2),], 2, sum)
+    }
+  }
+  FamG[,,M+1] = Phe
+  return(FamG)
+}
+
+
+h2=0.5
+M=10000
+freq=runif(M, 0.05, 0.95)
+b=rnorm(M, 0, sqrt(3*h2/M))
+
+S1=1000 #sample size 1
+S2=1000 #sample size 2
+
+n0=100 #overlapping samples
+n1=100 #overlapping first-degree relatives
+
+pop1=SimuInd(S1-n0-n1, M, h2, freq, b) #independent sample
+pop2=SimuInd(S2-n0-n1, M, h2, freq, b) #independent sample
+Gn0=SimuInd(n0, M, h2, freq, b) #overlapping samples
+Gn1=SimuNuFam(n1, 10000, 2, h2, freq, b) #nuclear family
+
+sample1=rbind(pop1, Gn0, Gn1[,3,])
+sample2=rbind(pop2, Gn0, Gn1[,4,])
+
+SS1=matrix(0, nrow = M, 4)
+for(i in 1:M) {
+  mod=lm(sample1[,M+1]~sample1[,i])
+  SS1[i,]=summary(mod)$coefficient[2,]
+}
+
+SS2=matrix(0, nrow = M, 4)
+for(i in 1:M) {
+  mod=lm(sample2[,M+1]~sample2[,i])
+  SS2[i,]=summary(mod)$coefficient[2,]
+}
+plot(SS1[,1], SS2[,1], bty="n", pch=16)
+
+```
+
+
+##7 $\lambda_{meta}$
 
 Given the summary statistics below, we have
 
@@ -149,7 +274,13 @@ For $m$ loci, we have $\mathbf{h}$, a $m\times 1$ vector. As the vector $\mathbf
 
 $\hat{\rho}_{\lambda_{meta}}=1-\lambda_{meta}$, and $E(\rho_{\lambda_{meta}})=\frac{n_o}{\sqrt{n_1n_2}}$.
 
-##5 Meta-analysis
+##8 Various overlapping relatives
+
+1. Overlapping individuals
+
+2. Overlapping relatives
+
+##9 Meta-analysis
 
 For a pair of cohorts, for the$j^{th}$ locus, we have $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$, and $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$.
 
@@ -254,8 +385,14 @@ qqplot(main="Heterogeneity (4 cohorts)", xlab="Q", ylab=expression(paste("Theore
 abline(a=0, b=1)
 ```
 
+##10 MLM GWAMA
+Mixed model for GWAMA
 
-##6 Notes for LD simulation
+$\beta=\mu+Mb+e$
+
+$\beta\sim N(\mu, \sigma_M+\sigma_e)$
+
+##11 Notes for LD simulation
 
 **A pair of loci**
 
@@ -296,3 +433,6 @@ print("Write R code for ld simulation")
 Devlin B., Risch N., 1995 A comparison of linkage disequilibrium measures for fine-scale mapping. **Genomics** 29: 311-22.
 
 Lewontin R. C., 1964 The Interaction of Selection and Linkage. I. General Considerations; Heterotic Models. **Genetics** 49: 49-67.
+
+
+##12 Power calculation
