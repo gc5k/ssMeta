@@ -16,9 +16,9 @@ print(paste0("Document was last updated at ", Date, "."))
 
 ----
 
-#Table of contents {.tabset .tabset-fade .tabset-pills}
+# Table of contents {.tabset .tabset-fade .tabset-pills}
 
-##1 Theory
+## 1 Theory
 
 **Background**
 
@@ -52,7 +52,7 @@ $\rho=cor(\textbf{z}_1,\textbf{z}_2)=\frac{\frac{\sqrt{h^2_1h^2_2}}{m}\gamma_G+\
 |$\gamma_P$|Phenotypic correlation for a pair of traits|
 |$r_{o}=\frac{n_o}{\sqrt{n_1n_2}}$|Overlapping samples between a pair of cohorts|
 
-##2 Experiment design
+## 2 Experiment design
 
 | | | | |Method | | |
 |:-----------------------------:|---------------------------------|---------------------------------------|-----------------------------|------------------------------------------|----------------------------|------------------------------------------------------|
@@ -62,7 +62,7 @@ $\rho=cor(\textbf{z}_1,\textbf{z}_2)=\frac{\frac{\sqrt{h^2_1h^2_2}}{m}\gamma_G+\
 | consortia | $h^2=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |  $h^2=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |$n_{e,0}$,$n_{e,1}$   | decouple, GLM, $\chi^2$, deep clean|
 |  | $h^2!=0$, $E(n_e)!=n_e$ | NA |  $h^2!=0$, $E(n_e)=n_e$ |decouple, GLM, $\chi^2$ |$n_{e,0}$,$n_{e,1}$  | decouple, GLM, $\chi^2$, deep clean |
 
-##3 Simulating a cohort
+## 3 Simulating a cohort
 
 **Parameter setting (no LD):**
 
@@ -106,7 +106,7 @@ After GWAS, we have a table for GWAS summary statistics
 |||||||
 
 
-##4 Simulating a pair of cohorts
+## 4 Simulating a pair of cohorts
 
 In general, the procedure is the same as for simulating a single cohort. 
 
@@ -136,7 +136,7 @@ For a pair of cohorts we have summary statistics below
 ||||||||||||
 
 
-##5 Simulating nuclear families
+## 5 Simulating nuclear families
 ```{r, fam}
 
 M=100
@@ -171,7 +171,7 @@ Phe=Phe+rnorm(length(Phe), 0, sqrt(0.5))
 print(var(Phe))
 ```
 
-##6 Effective overlapping samples$n_e$
+## 6 Effective overlapping samples$n_e$
 ```{r, ne}
 SimuInd <- function(s, m, h2, fq, B) {
   hsq=h2
@@ -253,7 +253,7 @@ plot(SS1[,1], SS2[,1], bty="n", pch=16)
 ```
 
 
-##7 $\lambda_{meta}$
+## 7 $\lambda_{meta}$
 
 Given the summary statistics below, we have
 
@@ -274,13 +274,13 @@ For $m$ loci, we have $\mathbf{h}$, a $m\times 1$ vector. As the vector $\mathbf
 
 $\hat{\rho}_{\lambda_{meta}}=1-\lambda_{meta}$, and $E(\rho_{\lambda_{meta}})=\frac{n_o}{\sqrt{n_1n_2}}$.
 
-##8 Various overlapping relatives
+## 8 Various overlapping relatives
 
 1. Overlapping individuals
 
 2. Overlapping relatives
 
-##9 Meta-analysis
+## 9 Meta-analysis
 
 For a pair of cohorts, for the$j^{th}$ locus, we have $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$, and $\hat\beta_{j,1}$, $\hat{\sigma}^2_{\beta_{j,1}}$.
 
@@ -385,14 +385,14 @@ qqplot(main="Heterogeneity (4 cohorts)", xlab="Q", ylab=expression(paste("Theore
 abline(a=0, b=1)
 ```
 
-##10 MLM GWAMA
+## 10 MLM GWAMA
 Mixed model for GWAMA
 
 $\beta=\mu+Mb+e$
 
 $\beta\sim N(\mu, \sigma_M+\sigma_e)$
 
-##11 Notes for LD simulation
+## 11 Notes for LD simulation
 
 **A pair of loci**
 
@@ -435,4 +435,4 @@ Devlin B., Risch N., 1995 A comparison of linkage disequilibrium measures for fi
 Lewontin R. C., 1964 The Interaction of Selection and Linkage. I. General Considerations; Heterotic Models. **Genetics** 49: 49-67.
 
 
-##12 Power calculation
+## 12 Power calculation
