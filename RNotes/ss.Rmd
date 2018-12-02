@@ -1,7 +1,7 @@
 ---
 title: "SumStat"
 author: "gc5k"
-date: "7/7/2018"
+date: "`r Sys.Date()`"
 output: 
   html_document:
     theme: united

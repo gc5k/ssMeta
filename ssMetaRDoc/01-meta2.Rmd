@@ -1,0 +1,26 @@
+# A novel GWAMA {#nGWAMA}
+
+An improved design for meta-analysis for GWAS, abbreviated as <font color="red">`meta2` </font>.
+
+[Study notes at Rpub](http://rpubs.com/gc5k/SumStat).
+
+## Meta-QC
+
+### PPSR
+
+### mStructure
+
+### m$\lambda$
+
+### mPCA
+
+### $n_o$
+
+## Linear model for meta
+
+## A toy example
+
+Oxford vs Edinburgh
+
+## Web sever
+
