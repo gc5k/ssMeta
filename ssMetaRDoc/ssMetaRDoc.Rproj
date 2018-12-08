@@ -11,3 +11,5 @@ Encoding: ASCII
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
+
+BuildType: Website
