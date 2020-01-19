@@ -435,4 +435,33 @@ Devlin B., Risch N., 1995 A comparison of linkage disequilibrium measures for fi
 Lewontin R. C., 1964 The Interaction of Selection and Linkage. I. General Considerations; Heterotic Models. **Genetics** 49: 49-67.
 
 
-## 12 Power calculation
+## 12 Simulation for cohort allele frequencies
+
+We simulate three ancestry cohorts first (colored squares), and then their admixed cohorts in between. 
+```{r, ss-cohort}
+M=10000
+fst1=0.05 #fst for the first two ancestry cohorts
+fst2=0.01 #fst for the third ancestry cohort
+P=runif(M, 0.1, 0.9)
+Fq=matrix(0, 3, M)
+Fq[1,]=rbeta(M, P*(1-fst1)/fst1, (1-P)*(1-fst1)/fst1) #cohort 1
+Fq[2,]=rbeta(M, P*(1-fst1)/fst1, (1-P)*(1-fst1)/fst1) #cohort 2
+Fq[3,]=rbeta(M, Fq[2,]*(1-fst2)/fst2, (1-Fq[2,])*(1-fst2)/fst2) #cohort 3
+
+popN=10 #10 other cohorts, any cohort is a mixture between two of the above ancestry cohorts
+Fq2=matrix(0, popN, M)
+for(i in 1:popN) {
+  idx=sample(3, 2) #sample two cohorts
+  prop=rbeta(1, 20, 50) 
+  Fq2[i,]=prop*Fq[idx[1],]+(1-prop)*Fq[idx[2],] #admixed
+}
+
+FQ=rbind(Fq, Fq2)
+FqS=apply(FQ, 2, scale)
+ss=FqS%*%t(FqS)
+ssE=eigen(ss)
+plot(ssE$vectors[,1], ssE$vectors[,2], xlab="mPC 1", ylab="mPC 2", bty='l')
+points(ssE$vectors[1:3,1], ssE$vectors[1:3,2], pch=15, col=c("red", "blue", "green"), cex=2)
+```
+
+## 13 Power calculation

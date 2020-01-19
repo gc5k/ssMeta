@@ -6,5 +6,5 @@ server: rpubs.com
 hostUrl: rpubs.com
 appId: https://api.rpubs.com/api/v1/document/444914/4c1fe9d28c0c4457bdf708383715809c
 bundleId: https://api.rpubs.com/api/v1/document/444914/4c1fe9d28c0c4457bdf708383715809c
-url: http://rpubs.com/gc5k/444914/edit
-when: 1543732995.4999
+url: http://rpubs.com/gc5k/444914
+when: 1579404840.09609
